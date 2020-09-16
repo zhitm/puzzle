@@ -72,16 +72,29 @@ def teleportation(pzl1, pzl2):
 			pzl.x += vector[0]
 			pzl.y += vector[1]
 
+
+
 def connect():
 	for pzl, pzl1 in combinations(pzl_list, 2):
 		if is_near(pzl, pzl1):
-			for el in pzl.connected:
-				if el not in pzl1.connected:
-					pzl1.connected.append(el)
-			for el in pzl1.connected:
-				if el not in pzl.connected:
-					pzl.connected.append(el)
-			teleportation(pzl, pzl1)
+			if pzl not in pzl1.connected:
+				for el in pzl.connected:
+					if el not in pzl1.connected:
+						pzl1.connected.append(el)
+						if pzl not in el.connected:
+							el.connected.append(pzl)
+						if pzl1 not in el.connected:
+							el.connected.append(pzl1)
+
+				for el in pzl1.connected:
+					if el not in pzl.connected:
+						pzl.connected.append(el)
+						if pzl1 not in el.connected:
+							el.connected.append(pzl1)
+						if pzl not in el.connected:
+							el.connected.append(pzl)
+
+				teleportation(pzl, pzl1)
 
 def click(event):
 	for puzzle in pzl_list:
