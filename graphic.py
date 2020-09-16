@@ -20,6 +20,7 @@ for puzzle in pzl_list:
 
 pzl_width, pzl_height = pzl_list[0].size_x, pzl_list[0].size_y
 
+list_of_union = []
 def draw():
 	for puzzle in pzl_list:
 		screen.blit(puzzle.image, (puzzle.x - int(pzl_width / 2), puzzle.y - int(pzl_height / 2)))
@@ -72,29 +73,30 @@ def teleportation(pzl1, pzl2):
 			pzl.x += vector[0]
 			pzl.y += vector[1]
 
-
+def unite_list(list1, list2):
+	union = []
+	for el in list1:
+		if el not in union:
+			union.append(el)
+	for el in list2:
+		if el not in union:
+			union.append(el)
+	return union
 
 def connect():
-	for pzl, pzl1 in combinations(pzl_list, 2):
-		if is_near(pzl, pzl1):
-			if pzl not in pzl1.connected:
-				for el in pzl.connected:
-					if el not in pzl1.connected:
-						pzl1.connected.append(el)
-						if pzl not in el.connected:
-							el.connected.append(pzl)
-						if pzl1 not in el.connected:
-							el.connected.append(pzl1)
-
-				for el in pzl1.connected:
-					if el not in pzl.connected:
-						pzl.connected.append(el)
-						if pzl1 not in el.connected:
-							el.connected.append(pzl1)
-						if pzl not in el.connected:
-							el.connected.append(pzl)
-
-				teleportation(pzl, pzl1)
+	for A, B in combinations(pzl_list, 2):
+		if is_near(A, B):
+			if [A, B] not in list_of_union:
+				teleportation(A, B)
+				list_of_union.append([A, B])
+				list_of_union.append([B, A])
+			union = unite_list(A.connected, B.connected)
+			A.connected = union
+			B.connected = union
+			for el in A.connected:
+				el.connected = union
+			for el in B.connected:
+				el.connected = union
 
 def click(event):
 	for puzzle in pzl_list:
@@ -104,7 +106,7 @@ def click(event):
 			for pzl in puzzle.connected:
 				pzl.x += vector[0]
 				pzl.y += vector[1]
-				connect()
+			connect()
 			break
 
 b1_is_clicked = False
