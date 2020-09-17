@@ -6,9 +6,9 @@ from pygame import image
 def load_img(path):
 	return Image.open(path)
 
-def divide_img(img, x, y):
+def divide_img(img, x, y, folder_name):
 	img_x, img_y = img.size
-	path = os.getcwd()+"\\"+ "cat"
+	path = os.getcwd()+"\\"+ folder_name
 	try:
 		os.mkdir(path)
 	except:
@@ -29,4 +29,4 @@ def load_img_from_dir(path):
 
 if __name__ == "__main__":
 	cat = load_img("cat.jpg")
-	divide_img(cat, 4, 4)
+	divide_img(cat, 4, 4, "cat")
