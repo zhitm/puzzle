@@ -21,6 +21,9 @@ path_to_puzzle = image.split(".")[0]
 pzl_list = load_img_from_dir(path_to_puzzle)
 pzl_xy_to_pzl = dict()
 
+global moved_puzzle
+moved_puzzle = None
+
 for puzzle in pzl_list:
 	pzl_xy_to_pzl.update({ (int(puzzle.pzl_x), int(puzzle.pzl_y)) : puzzle})
 	puzzle.x = randint(250, SCREEN_X - 400)
@@ -123,19 +126,30 @@ def push_to_the_top_of_array(pzl):
 	pzl_list.remove(pzl)
 	pzl_list.insert(0, pzl)
 
-def click(event):
-	for puzzle in pzl_list:
-		x, y = event.pos
-		if abs(puzzle.x - x) <= puzzle.size_x/2 and abs(puzzle.y - y) <= puzzle.size_y/2:
-			vector = [x - puzzle.x, y - puzzle.y]
-			for pzl in puzzle.connected:
-				pzl.x += vector[0]
-				pzl.y += vector[1]
-				push_to_the_top_of_array(pzl)
-			push_to_the_top_of_array(puzzle)
+def move_segment(puzzle, vector):
+	for pzl in puzzle.connected:
+		pzl.x += vector[0]
+		pzl.y += vector[1]
+		push_to_the_top_of_array(pzl)
+	push_to_the_top_of_array(puzzle)
 
-			connect()
-			break
+def click(event):
+	global moved_puzzle
+	x, y = event.pos
+	if moved_puzzle == None:
+		for puzzle in pzl_list:
+			if abs(puzzle.x - x) <= puzzle.size_x/2 and abs(puzzle.y - y) <= puzzle.size_y/2:
+				vector = [x - puzzle.x, y - puzzle.y]
+				move_segment(puzzle, vector)
+				moved_puzzle = puzzle
+
+				connect()
+				break
+	else:
+		puzzle = moved_puzzle
+		vector = [x - puzzle.x, y - puzzle.y]
+		move_segment(puzzle, vector)
+
 
 b1_is_clicked = False
 game_is_not_over = True
@@ -150,11 +164,13 @@ while game_is_not_over:
 			b1_is_clicked = True
 		elif event.type == pygame.MOUSEBUTTONUP:
 			b1_is_clicked = False
+			moved_puzzle = None
+			print('down')
 		elif event.type == pygame.MOUSEMOTION:
 			if b1_is_clicked:
 				click(event)
 		elif event.type == pygame.QUIT:
-			clear_folder(os.getcwd()+"\\" + folder_name)
+			clear_folder(os.getcwd()+ "\\" + folder_name)
 			pygame.quit()
 			sys.exit()
 		elif event.type == pygame.KEYDOWN:
