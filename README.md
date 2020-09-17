@@ -1,0 +1,2 @@
+# puzzle
+Запускать graphic.py
