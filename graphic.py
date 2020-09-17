@@ -10,8 +10,11 @@ folder_name = image.split("\\")[-1].split(".")[0]
 
 x_divide = int(easygui.enterbox("Enter width of puzzle:"))
 y_divide = int(easygui.enterbox("Enter height of puzzle:"))
+
 divide_img(load_img(image), x_divide, y_divide, folder_name)
+
 pygame.init()
+
 SCREEN_X = 1920
 SCREEN_Y = 1080
 screen = pygame.display.set_mode((SCREEN_X, SCREEN_Y), pygame.FULLSCREEN)
@@ -41,8 +44,8 @@ def is_near(pzl1, pzl2):
 	px2 = pzl2.pzl_x
 	py1 = pzl1.pzl_y
 	py2 = pzl2.pzl_y
-	dx = 8
-	dy = 8
+	dx = 5
+	dy = 5
 	if ((px1-px2) == 0 or (py1-py2) == 0) and (abs(px1-px2) == 1 or abs(py1-py2) == 1):
 		if px1 == px2:
 			if not abs(pzl1.x - pzl2.x) < dx:
@@ -65,7 +68,7 @@ def is_near(pzl1, pzl2):
 		return True
 
 def teleportation(pzl1, pzl2):
-	vector = [0,0]
+	vector = [0, 0]
 	if pzl1.pzl_x == pzl2.pzl_x:
 		vector[0] = pzl1.x - pzl2.x
 	if pzl1.pzl_y == pzl2.pzl_y:
@@ -80,7 +83,7 @@ def teleportation(pzl1, pzl2):
 		vector[1] = pzl1.y - pzl2.y + pzl_height
 
 	for pzl in pzl2.connected:
-		if pzl!= pzl1:
+		if pzl != pzl1:
 			pzl.x += vector[0]
 			pzl.y += vector[1]
 
@@ -120,6 +123,7 @@ def are_you_win():
 	if len(pzl.connected) == (x+1)*(y+1):
 		easygui.msgbox("YOU WIN", "you win", "ok", "ball.jpg")
 		return True
+	return False
 
 
 def push_to_the_top_of_array(pzl):
@@ -142,14 +146,18 @@ def click(event):
 				vector = [x - puzzle.x, y - puzzle.y]
 				move_segment(puzzle, vector)
 				moved_puzzle = puzzle
-
 				connect()
 				break
 	else:
-		puzzle = moved_puzzle
-		vector = [x - puzzle.x, y - puzzle.y]
-		move_segment(puzzle, vector)
+		vector = [x - moved_puzzle.x, y - moved_puzzle.y]
+		move_segment(moved_puzzle, vector)
+		connect()
 
+
+def quit():
+	clear_folder(os.getcwd() + "\\" + folder_name)
+	pygame.quit()
+	sys.exit()
 
 b1_is_clicked = False
 game_is_not_over = True
@@ -158,26 +166,20 @@ while game_is_not_over:
 	if are_you_win():
 		game_is_not_over = False
 		clear_folder(os.getcwd() + "\\" + folder_name)
-
 	for event in events:
 		if event.type == pygame.MOUSEBUTTONDOWN:
 			b1_is_clicked = True
 		elif event.type == pygame.MOUSEBUTTONUP:
 			b1_is_clicked = False
 			moved_puzzle = None
-			print('down')
 		elif event.type == pygame.MOUSEMOTION:
 			if b1_is_clicked:
 				click(event)
 		elif event.type == pygame.QUIT:
-			clear_folder(os.getcwd()+ "\\" + folder_name)
-			pygame.quit()
-			sys.exit()
+			quit()
 		elif event.type == pygame.KEYDOWN:
 			if event.key == pygame.K_ESCAPE:
-				clear_folder(os.getcwd()+"\\"+folder_name)
-				pygame.quit()
-				sys.exit()
+				quit()
 
 	screen.fill((100, 150, 200))
 	draw()
