@@ -1,3 +1,4 @@
+from PIL import Image, ImageTk
 class Puzzle:
 	def __init__(self, image, x, y):
 		self.image = image
