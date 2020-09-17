@@ -7,7 +7,10 @@ from load import load_img, load_img_from_dir, divide_img
 import easygui
 image = easygui.fileopenbox(filetypes=["*.jpg"])
 folder_name = image.split("\\")[-1].split(".")[0]
-divide_img(load_img(image), 7, 7, folder_name)
+
+x_divide = int(easygui.enterbox("Enter width of puzzle:"))
+y_divide = int(easygui.enterbox("Enter height of puzzle:"))
+divide_img(load_img(image), x_divide, y_divide, folder_name)
 pygame.init()
 SCREEN_X = 1920
 SCREEN_Y = 1080
@@ -17,6 +20,9 @@ screen.fill((100, 150, 200))
 path_to_puzzle = image.split(".")[0]
 pzl_list = load_img_from_dir(path_to_puzzle)
 pzl_xy_to_pzl = dict()
+
+global moved_puzzle
+moved_puzzle = None
 
 for puzzle in pzl_list:
 	pzl_xy_to_pzl.update({ (int(puzzle.pzl_x), int(puzzle.pzl_y)) : puzzle})
@@ -68,7 +74,7 @@ def teleportation(pzl1, pzl2):
 		vector[0] = pzl1.x - pzl2.x - pzl_width
 	elif pzl1.pzl_x < pzl2.pzl_x:
 		vector[0] = pzl1.x - pzl2.x + pzl_width
-	if pzl1.pzl_y > pzl2.y:
+	if pzl1.pzl_y > pzl2.pzl_y:
 		vector[1] = pzl1.y - pzl2.y - pzl_height
 	elif pzl1.pzl_y < pzl2.pzl_y:
 		vector[1] = pzl1.y - pzl2.y + pzl_height
@@ -102,39 +108,74 @@ def connect():
 				el.connected = union
 			for el in B.connected:
 				el.connected = union
+
+def clear_folder(path_to_folder):
+	files = os.listdir(path_to_folder)
+	for file in files:
+		os.remove(path_to_folder+"\\"+file)
+
+def are_you_win():
+	(x, y) = max(pzl_xy_to_pzl.keys())
+	pzl = pzl_list[0]
+	if len(pzl.connected) == (x+1)*(y+1):
+		easygui.msgbox("YOU WIN", "you win", "ok", "ball.jpg")
+		return True
+
+
 def push_to_the_top_of_array(pzl):
 	pzl_list.remove(pzl)
 	pzl_list.insert(0, pzl)
 
+def move_segment(puzzle, vector):
+	for pzl in puzzle.connected:
+		pzl.x += vector[0]
+		pzl.y += vector[1]
+		push_to_the_top_of_array(pzl)
+	push_to_the_top_of_array(puzzle)
+
 def click(event):
-	for puzzle in pzl_list:
-		x, y = event.pos
-		if abs(puzzle.x - x) < 50 and abs(puzzle.y - y) < 50:
-			push_to_the_top_of_array(puzzle)
-			vector = [x - puzzle.x, y - puzzle.y]
-			for pzl in puzzle.connected:
-				pzl.x += vector[0]
-				pzl.y += vector[1]
-			connect()
-			break
+	global moved_puzzle
+	x, y = event.pos
+	if moved_puzzle == None:
+		for puzzle in pzl_list:
+			if abs(puzzle.x - x) <= puzzle.size_x/2 and abs(puzzle.y - y) <= puzzle.size_y/2:
+				vector = [x - puzzle.x, y - puzzle.y]
+				move_segment(puzzle, vector)
+				moved_puzzle = puzzle
+
+				connect()
+				break
+	else:
+		puzzle = moved_puzzle
+		vector = [x - puzzle.x, y - puzzle.y]
+		move_segment(puzzle, vector)
+
 
 b1_is_clicked = False
-
-while 1:
+game_is_not_over = True
+while game_is_not_over:
 	events = pygame.event.get()
+	if are_you_win():
+		game_is_not_over = False
+		clear_folder(os.getcwd() + "\\" + folder_name)
+
 	for event in events:
 		if event.type == pygame.MOUSEBUTTONDOWN:
 			b1_is_clicked = True
 		elif event.type == pygame.MOUSEBUTTONUP:
 			b1_is_clicked = False
+			moved_puzzle = None
+			print('down')
 		elif event.type == pygame.MOUSEMOTION:
 			if b1_is_clicked:
 				click(event)
 		elif event.type == pygame.QUIT:
+			clear_folder(os.getcwd()+ "\\" + folder_name)
 			pygame.quit()
 			sys.exit()
 		elif event.type == pygame.KEYDOWN:
 			if event.key == pygame.K_ESCAPE:
+				clear_folder(os.getcwd()+"\\"+folder_name)
 				pygame.quit()
 				sys.exit()
 
